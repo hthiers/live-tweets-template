@@ -1,4 +1,5 @@
 var tweetRace = {};
+var target_user = "null";
 
 
 // Array for tweets queue
@@ -7,9 +8,7 @@ tweetRace.tweets = [];
 // Start the race with settings from tweets[]
 tweetRace.start = _.throttle(function(map){
     if (map) tweetRace._map = map;
-    $('th.first').text(tweets[0] + ' tweets');
-    $('th.second').text(tweets[1] + ' tweets');
-    tweetRace.getTweets(tweets[0] + ' OR ' + tweets[1], tweets[2]);
+    tweetRace.getTweets(tweets[0]);
 }, 2000);
     
 tweetRace.params = {
@@ -21,7 +20,10 @@ tweetRace.params = {
 // Fetch tweets from Twitter
 tweetRace.getTweets = function(query, geo) {
     tweetRace.params.q = query;
-    tweetRace.params.geocode = geo;    
+    tweetRace.params.geocode = geo; 
+    
+    // For target twitter profile
+    target_user = query;
 
     params = '?' + _.map(tweetRace.params, function(num, key) {
         return key + "=" + num;
@@ -32,14 +34,14 @@ tweetRace.getTweets = function(query, geo) {
         type: 'jsonp',
         jsonCallback: 'callback',
         success: function(d) {
-            tweetRace.processTweet(d);
+            tweetRace.processTweet(d, target_user);
         }
     });
 };
 
 
 // Extract relevant data from tweets
-tweetRace.processTweet = function(d) {
+tweetRace.processTweet = function(d, target_user) {
     _.each(d.results, function(element, index) {
         if (element.geo && element.geo.type === 'Point') {
             var lat = element.geo.coordinates[0], // Twitter seems to reverse the
@@ -56,15 +58,19 @@ tweetRace.processTweet = function(d) {
             }
         }
         
+        // && element.geo != 'null'
+        
         if (lat && lon) {
-            tweetRace.tweets.push({
-                lon: lon,
-                lat: lat,
-                time: formatDate(new Date(element.created_at)),
-                text: element.text,
-                user: '@' + element.from_user,
-                category: (element.text.toLowerCase().indexOf(tweets[0].toLowerCase()) >= 0) ? 'first' : 'second'
-            });
+            if(element.from_user === target_user){
+                tweetRace.tweets.push({
+                    lon: lon,
+                    lat: lat,
+                    time: formatDate(new Date(element.created_at)),
+                    text: element.text,
+                    user: '@' + element.from_user,
+                    category: 'first'
+                });
+            }
         }
     });
     
@@ -112,7 +118,7 @@ tweetRace.map = function() {
     _.each(_.rest(tweetRace.tweets, tweetRace.last || 0), function(tweet) {
         features.push({
             type: 'Feature',
-            geometry: { 
+            geometry: {
                 type: 'Point',
                 coordinates: [tweet.lon, tweet.lat] 
             },
@@ -161,6 +167,7 @@ tweetRace.map = function() {
     });
 
     tweetRace.counters();
+    
     if (!tweetRace.stop) tweetRace.start();
 };
 

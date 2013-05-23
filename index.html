@@ -47,15 +47,13 @@
     
         // Specify the tweets and location / radius to search
         var tweets = [
-            'work',             // First term
-            'play',             // Second term
-            '39,-98,1500mi'     // search location and radius (lat,lon,radius)
+            'joacomartel'             // User
         ];
 
         mapbox.auto('map', 'examples.map-dg7cqh4z', function(map, tiledata) {
             map.centerzoom({
-                lat: 40,
-                lon: -80
+                lat: -33,
+                lon: -71
             }, 4);
 
             map.setZoomRange(2, 15);
