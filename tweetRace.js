@@ -20,7 +20,6 @@ tweetRace.params = {
 // Fetch tweets from Twitter
 tweetRace.getTweets = function(query, geo) {
     tweetRace.params.q = query;
-    tweetRace.params.geocode = geo; 
     
     // For target twitter profile
     target_user = query;
